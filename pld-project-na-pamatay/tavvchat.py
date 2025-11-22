@@ -1,3 +1,7 @@
+from setup_env import setup_venv
+
+setup_venv()
+
 import os
 from groq import Groq
 import sqlite3
@@ -9,10 +13,15 @@ db = DatabaseLoader()  # create instance
 # ----------------------------------
 # READ TOKEN FROM DEVICE STORAGE
 # ----------------------------------
-with open("device_token.txt", "r") as f:
-    device_token = f.read().strip()
+def read_device_token(file_path):
+    with open(file_path, "r") as f:
+        return f.read().strip()
 
-info = db.get_resident_from_token(device_token)
+device1_token = read_device_token("device1_token.txt")
+device2_token = read_device_token("device2_token.txt")
+
+
+info = db.get_resident_from_token(device2_token)
 name = info["name"]
 room = info["room_number"]
 
@@ -20,8 +29,8 @@ if not info:
     print("ERROR: Your device token is not registered in the hotel system.")
     exit()
 
-print(f"Authenticated as room {room}.\nLaunching Tavv...")
-print("Hello", name )
+print(f"Launching Tavv...")
+print("Hello,", name )
 
 #------------------------------
 #Chat functions from here on out 
@@ -66,7 +75,11 @@ def chat(user_input, room_number):
                 #Response Limitation
                 "When the user asks, try NOT to add instructions or steps unless the user explicitly requests: explain, how do I, or steps."
                 #Language accomodation
-                "Speak in user's language.")}
+                "Speak in user's language."
+                #Miscellanaeous Instructions
+                "When user implicates a sense of boredom, offer hotel activities from the activity center, or pools."
+                "Any accomidty or service offered by the hotel (food, housekeeping,etc.) is included in the user's stay."
+                "Detect the city the hotel's situated in, and recommend local attractions accordingly.")}
 
 
 
@@ -101,5 +114,5 @@ if __name__ == "__main__":
             print("Tavv: Goodbye! Enjoy your stay.")
             break
         print("Tavv:", chat(msg, room))
-    
+
     

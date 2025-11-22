@@ -12,15 +12,15 @@ class DatabaseLoader:
         return sqlite3.connect(self.db_path)
 
     # -----------------------
-    # TOKEN → ROOM LOOKUP
+    # TOKEN → RESIDENT LOOKUP
     # -----------------------
     def get_resident_from_token(self, token):
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT resident_id, name, room_number, device_token, checkin_time
+            SELECT resident_id, name, room_number, device_token, checkin_time, checkout_time, token_voided
             FROM residents
-            WHERE device_token = ?
+            WHERE device_token = ? AND token_voided = 0
         """, (token,))
     
         row = cursor.fetchone()
@@ -34,7 +34,9 @@ class DatabaseLoader:
             "name": row[1],
             "room_number": row[2],
             "device_token": row[3],
-            "checkin_time": row[4]
+            "checkin_time": row[4],
+            "checkout_time": row[5],
+            "token_voided": bool(row[6])
         }
 
     # -----------------------
@@ -45,11 +47,11 @@ class DatabaseLoader:
         conn = self.connect()
         cursor = conn.cursor()
 
-        # 0. Resident info
+        # 0. Resident info (active only)
         cursor.execute("""
             SELECT resident_id, name, room_number, device_token, checkin_time
             FROM residents
-            WHERE room_number = ?
+            WHERE room_number = ? AND token_voided = 0
         """, (room_number,))
         resident = cursor.fetchone()
 
@@ -64,23 +66,23 @@ class DatabaseLoader:
         else:
             resident_info = None
 
-        # 1. Room + building + wing
+        # 1. Room + building
         cursor.execute("""
-        SELECT 
-            r.room_number,
-            r.tv_brand,
-            r.fan_type,
-            r.thermostat_model,
-            b.building_id,
-            b.name AS building_name,
-            w.wing_id,
-            w.name AS wing_name,
-            w.wifi_ssid,
-            w.wifi_password
-        FROM rooms r
-        JOIN buildings b ON r.building_id = b.building_id
-        JOIN wings w ON r.wing_id = w.wing_id
-        WHERE r.room_number = ?
+            SELECT 
+                r.room_number,
+                r.tv_brand,
+                r.fan_type,
+                r.thermostat_model,
+                r.floor,
+                r.room_type,
+                b.building_id,
+                b.name AS building_name,
+                b.wifi_ssid,
+                b.wifi_password,
+                b.restaurant_name
+            FROM rooms r
+            JOIN buildings b ON r.building_id = b.building_id
+            WHERE r.room_number = ?
         """, (room_number,))
         room = cursor.fetchone()
 
@@ -93,12 +95,13 @@ class DatabaseLoader:
             tv_brand,
             fan_type,
             thermostat_model,
+            floor,
+            room_type,
             building_id,
             building_name,
-            wing_id,
-            wing_name,
             wifi_ssid,
-            wifi_password
+            wifi_password,
+            restaurant_name
         ) = room
 
         # 2. Amenities
@@ -109,22 +112,22 @@ class DatabaseLoader:
         """, (building_id,))
         amenities = cursor.fetchall()
 
-        # 3. Activities
-        cursor.execute("SELECT floor, type, activity_name FROM activity_center")
-        activities = cursor.fetchall()
+        # 3. Water sports activities
+        cursor.execute("SELECT name, description FROM water_sports")
+        water_sports = cursor.fetchall()
 
         # 4. Pools
         cursor.execute("SELECT name, features FROM pools")
         pools = cursor.fetchall()
 
-        # 5. Restaurant menu
+        # 5. Restaurant menu (Island Cafe only)
         today_day = datetime.now().strftime("%A")
         cursor.execute("""
             SELECT day, meal, item_name
             FROM restaurant_menu
-            WHERE day = ?
+            WHERE restaurant_name = ? AND day = ?
             ORDER BY meal, item_name
-        """, (today_day,))
+        """, (restaurant_name, today_day))
         menu = cursor.fetchall()
 
         conn.close()
@@ -136,22 +139,21 @@ class DatabaseLoader:
                 "tv_brand": tv_brand,
                 "fan_type": fan_type,
                 "thermostat_model": thermostat_model,
+                "floor": floor,
+                "room_type": room_type
             },
             "building": {
                 "id": building_id,
                 "name": building_name,
-            },
-            "wing": {
-                "id": wing_id,
-                "name": wing_name,
                 "wifi_ssid": wifi_ssid,
-                "wifi_password": wifi_password
+                "wifi_password": wifi_password,
+                "restaurant_name": restaurant_name
             },
             "amenities": [
                 {"name": a[0], "description": a[1], "floor": a[2]} for a in amenities
             ],
-            "activities": [
-                {"floor": act[0], "type": act[1], "name": act[2]} for act in activities
+            "water_sports": [
+                {"name": ws[0], "description": ws[1]} for ws in water_sports
             ],
             "pools": [
                 {"name": p[0], "features": p[1]} for p in pools
