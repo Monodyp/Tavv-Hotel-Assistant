@@ -130,6 +130,14 @@ class DatabaseLoader:
         """, (restaurant_name, today_day))
         menu = cursor.fetchall()
 
+        # 6. hotel
+        cursor.execute("SELECT name, location, nearby_restaurants, fun_destinations FROM hotel")
+        hotel = cursor.fetchall()
+
+        # 7. housekeeping
+        cursor.execute("SELECT log_id, room_number, cleaned_time, cleaner_name FROM housekeeping_log")
+        housekeep = cursor.fetchall()
+
         conn.close()
 
         return {
@@ -157,6 +165,12 @@ class DatabaseLoader:
             ],
             "pools": [
                 {"name": p[0], "features": p[1]} for p in pools
+            ],
+                        "housekeeping": [
+                {"log_id": hk[0], "room_number": hk[1], "cleaned_time": hk[2], "cleaner_name": hk[3],} for hk in housekeep
+            ],
+                        "hotel": [
+                {"name": h[0], "location": h[1], "nearby_restaurants": h[2], "fundestinations": h[3]} for h in hotel
             ],
             "restaurant_menu": [
                 {"day": m[0], "meal": m[1], "item_name": m[2]} for m in menu

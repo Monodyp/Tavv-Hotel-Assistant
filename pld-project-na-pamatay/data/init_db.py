@@ -8,7 +8,33 @@ conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
 # ---------------------------
-# 0. Resident Check-in
+# 1. Housekeeping
+# ---------------------------
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS housekeeping_log (
+    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_number TEXT NOT NULL,
+    cleaned_time TEXT NOT NULL,
+    cleaner_name TEXT NOT NULL,
+    FOREIGN KEY(room_number) REFERENCES rooms(room_number)
+)
+""")
+
+# ---------------------------
+# 2. Hotel
+# ---------------------------
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS hotel (
+    hotel_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE,
+    location TEXT ,
+    nearby_restaurants TEXT ,
+    fun_destinations TEXT
+)
+""")
+
+# ---------------------------
+# 3. Resident Check-in
 # ---------------------------
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS residents (
@@ -24,7 +50,7 @@ CREATE TABLE IF NOT EXISTS residents (
 """)
 
 # ---------------------------
-# 1. Buildings
+# 4. Buildings
 # ---------------------------
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS buildings (
@@ -37,7 +63,7 @@ CREATE TABLE IF NOT EXISTS buildings (
 """)
 
 # ---------------------------
-# 2. Rooms
+# 5. Rooms
 # ---------------------------
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS rooms (
@@ -53,7 +79,7 @@ CREATE TABLE IF NOT EXISTS rooms (
 """)
 
 # ---------------------------
-# 3. Amenities
+# 6. Amenities
 # ---------------------------
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS amenities (
@@ -67,7 +93,7 @@ CREATE TABLE IF NOT EXISTS amenities (
 """)
 
 # ---------------------------
-# 4. Pools
+# 7. Pools
 # ---------------------------
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS pools (
@@ -78,7 +104,7 @@ CREATE TABLE IF NOT EXISTS pools (
 """)
 
 # ---------------------------
-# 5. Water Sports Activities
+# 8. Water Sports Activities
 # ---------------------------
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS water_sports (
@@ -89,7 +115,7 @@ CREATE TABLE IF NOT EXISTS water_sports (
 """)
 
 # ---------------------------
-# 6. Restaurant Menu
+# 9. Restaurant Menu
 # ---------------------------
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS restaurant_menu (

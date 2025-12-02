@@ -37,8 +37,22 @@ def check_out_resident(token):
         os.remove("device_token.txt")
     print(f"Resident with token {token} checked out. Token voided and removed from device.")
 
+
+
 # ---------------------------
-# 1. Buildings
+# 1. Hotel
+# ---------------------------
+hotel = [
+    ("Canyon Cove", "Nasugbu, Batangas", "Mcdonald's", "Monte Maria")
+]
+
+cursor.executemany("""
+INSERT OR IGNORE INTO hotel (name, location, nearby_restaurants, fun_destinations)
+VALUES (?, ?, ?, ?)
+""", hotel)
+
+# ---------------------------
+# 2. Buildings
 # ---------------------------
 buildings = [
     ("Main Building", "CanyonWifi", "LobXeen", "Island Cafe"),
@@ -57,7 +71,7 @@ cursor.execute("SELECT building_id FROM buildings WHERE name='Second Building'")
 second_id = cursor.fetchone()[0]
 
 # ---------------------------
-# 2. Rooms
+# 3. Rooms
 # ---------------------------
 # Room Types per Floor
 floor_room_types = {
@@ -88,7 +102,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
 """, main_rooms + second_rooms)
 
 # ---------------------------
-# 3. Amenities
+# 4. Amenities
 # ---------------------------
 amenities = [
     (main_id, "Housekeeping", "Daily room cleaning service", 1),
@@ -103,7 +117,7 @@ VALUES (?, ?, ?, ?)
 """, amenities)
 
 # ---------------------------
-# 4. Pools
+# 5. Pools
 # ---------------------------
 pools = [
     ("Main Pool", "Slides, Rides"),
@@ -117,7 +131,7 @@ pools = [
 cursor.executemany("INSERT OR IGNORE INTO pools (name, features) VALUES (?, ?)", pools)
 
 # ---------------------------
-# 5. Water Sports
+# 6. Water Sports
 # ---------------------------
 water_sports = [
     ("Jet Skiing", "High-speed rides along the cove"),
@@ -133,7 +147,7 @@ VALUES (?, ?)
 """, water_sports)
 
 # ---------------------------
-# 6. Restaurant Menu (Island Cafe)
+# 7. Restaurant Menu (Island Cafe)
 # ---------------------------
 menus = [
     ("Monday", "Breakfast", "Breakfast Buffet", "Island Cafe"),
@@ -152,11 +166,26 @@ INSERT OR IGNORE INTO restaurant_menu (day, meal, item_name, restaurant_name)
 VALUES (?, ?, ?, ?)
 """, menus)
 
+
+housekeeping_logs = [
+    ('111', "2025-12-01 10:00:00", 'Angelo Antenor'), 
+    ('212', "2025-12-01 11:30:00", 'Franco Patrick'),
+    ('201', "2025-11-30 15:00:00", 'Maria A.'),
+    ('202', "2025-11-30 15:45:00", 'Chris D.')
+]
+
+# Insert all housekeeping log entries
+cursor.executemany("""
+INSERT OR IGNORE INTO housekeeping_log (room_number, cleaned_time, cleaner_name)
+VALUES (?, ?, ?)
+""", housekeeping_logs)
+
 # ---------------------------
-# 7. Seed Example Residents
+# 8. Seed Example Residents
 # ---------------------------
-token1 = seed_resident("Franco Patrick", "111", "device1_token.txt")
-token2 = seed_resident("Angelo Antenor", "212", "device2_token.txt")
+token1 = seed_resident("Joyce Ann Acob", "111", "device1_token.txt")
+token2 = seed_resident("Chelsy Agtay", "212", "device2_token.txt")
+token3 = seed_resident("Jelaine Soto", "213", "device3_token.txt")
 
 # ---------------------------
 # Commit & Close
